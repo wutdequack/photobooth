@@ -81,7 +81,22 @@ def createBatchFolder(service):
     return folder['id']
 
 
-def uploadFile(service, path, inner_folder_id):
+def getPhotosFromDir(path):
+    """Gets all the photos in the directory.
+
+    Args:
+        path (string): Path to the directory.
+
+    Returns:
+        List: List of photos in the directory.
+    """
+    photos = []
+    for photo in os.listdir(path):
+        photos.append(os.path.join(path, photo))
+    return photos
+
+
+def uploadFiles(service, path, inner_folder_id):
     """Uploads the file to the Google Drive.
 
     Args:
@@ -89,17 +104,18 @@ def uploadFile(service, path, inner_folder_id):
         path (string): Path to the file.
         inner_folder_id (string): ID of the folder.
     """
-    file_metadata = {
-        'name': path.split('/')[-1],
-        'parents': [inner_folder_id]
-    }
-    media = MediaFileUpload(path, 
-                            mimetype='image/jpeg',
-                            resumable=True)
-    file = service.files().create(body=file_metadata,
-                                media_body=media, 
-                                fields='id').execute()
-    print(f"[*] File #{file['id']} uploaded successfully!")
+    for photo in getPhotosFromDir(path):
+        file_metadata = {
+            'name': photo.split('/')[-1],
+            'parents': [inner_folder_id]
+        }
+        media = MediaFileUpload(photo, 
+                                mimetype='image/jpeg',
+                                resumable=True)
+        file = service.files().create(body=file_metadata,
+                                    media_body=media, 
+                                    fields='id').execute()
+        print(f"[*] File #{file['id']} uploaded successfully!")
 
 
 def printIntro():
@@ -115,21 +131,21 @@ def handleInput():
     Returns:
         String: Path to the photo. 
     """
-    print("Please enter the path to the photo you would like to upload: ")
+    print("Please enter the path to the folder of photos you would like to upload: ")
     path = input()
     return path
 
 
-def isLegitFile(path):
-    """Checks if the path provided is link to a legitimate file.
+def isLegitDir(path):
+    """Checks if the path provided is link to a legitimate directory.
 
     Args:
-        path (string): Path to the file.
+        path (string): Path to the directory.
 
     Returns:
-        Boolean: True if the file exists, False otherwise.
+        Boolean: True if the directory exists, False otherwise.
     """
-    return os.path.isfile(path)
+    return os.path.isdir(path)
 
 
 def printUploadingMessage(path):
@@ -142,13 +158,13 @@ def printUploadingMessage(path):
     print(f"[*] Uploading {path.split('/')[-1]} as batch {batch_number}")
 
 
-def printFileNotFound(path):
-    """Print message that file is not found.
+def printDirNotFound(path):
+    """Print message that directory is not found.
 
     Args:
-        path (string): Path to the file.
+        path (string): Path to the directory.
     """
-    print(f"[!] File not found: {path}")
+    print(f"[!] Directory not found: {path}")
     print("[!] Try again!!")
 
 
@@ -162,13 +178,13 @@ def main():
         service = createDriveObject(creds)
         while True:
             path = handleInput()
-            # If not a legitimate file, re-run loop
-            if not isLegitFile(path):
-                printFileNotFound(path)
+            # If not a legitimate directory, re-run loop
+            if not isLegitDir(path):
+                printDirNotFound(path)
                 continue
             printUploadingMessage(path)
             inner_folder_id = createBatchFolder(service)
-            uploadFile(service, path, inner_folder_id)
+            uploadFiles(service, path, inner_folder_id)
     except HttpError as error:
         # Handles error from drive API.
         print(f'An error occurred: {error}')
