@@ -18,8 +18,8 @@ from googleapiclient.http import MediaFileUpload
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
-# This is hardcoded according to the folder ID in my drive.
-PHOTOBOOTH_FOLDER_ID = "1Q9AW-f9C_WJGwhdQt3OHpcyMVB964KvY"
+# This is hardcoded according to the folder ID in my drives.
+PHOTOBOOTH_FOLDER_ID = "19sn_fDILV1TsCwqARZJEdPANpseMWuyV"
 batch_number = 1
 
 def authentication():
